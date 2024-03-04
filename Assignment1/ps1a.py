@@ -6,6 +6,7 @@
 
 from ps1_partition import get_partitions
 import time
+from collections import OrderedDict
 
 #================================
 # Part A: Transporting Space Cows
@@ -24,8 +25,12 @@ def load_cows(filename):
     Returns:
     a dictionary of cow name (string), weight (int) pairs
     """
-    # TODO: Your code here
-    pass
+    cow_data = {}
+    with open(filename, 'r') as file:
+        for line in file:
+            name, weight = line.strip().split(',')
+            cow_data[name] = int(weight)
+    return cow_data
 
 # Problem 2
 def greedy_cow_transport(cows,limit=10):
@@ -50,8 +55,24 @@ def greedy_cow_transport(cows,limit=10):
     transported on a particular trip and the overall list containing all the
     trips
     """
-    # TODO: Your code here
-    pass
+
+
+    sorted_cows = OrderedDict(sorted(cows.items(),key=lambda x:x[1],reverse=True))
+    trips = []
+
+    while sorted_cows:
+        current_limit = limit
+        current_trip = []
+      
+        for cow, weight in sorted_cows.items():
+            if(weight <= current_limit):
+                current_limit = current_limit - weight
+                current_trip.append({cow:weight})
+                sorted_cows = removekey(sorted_cows,cow)
+
+        trips.append(current_trip)   
+
+    return trips
 
 # Problem 3
 def brute_force_cow_transport(cows,limit=10):
@@ -75,8 +96,6 @@ def brute_force_cow_transport(cows,limit=10):
     transported on a particular trip and the overall list containing all the
     trips
     """
-    # TODO: Your code here
-    pass
         
 # Problem 4
 def compare_cow_transport_algorithms():
@@ -94,3 +113,27 @@ def compare_cow_transport_algorithms():
     """
     # TODO: Your code here
     pass
+
+def removekey(d, key):
+    r = dict(d)
+    del r[key]
+    return r
+
+def main():
+    ########### Problem 1 ############
+    
+    filename = 'ps1_cow_data.txt'
+    cow_dict = load_cows(filename)
+    # print(cow_dict)
+    
+    ########### Problem 2 ############
+    
+    greedy_choosen = greedy_cow_transport(cow_dict)
+    print("Minimum Transport with Greedy : " , len(greedy_choosen))
+    # print(greedy_choosen)
+
+    
+    
+    greedy_cow_transport(cow_dict)
+if __name__ == "__main__":
+    main()
