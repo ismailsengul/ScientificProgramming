@@ -96,6 +96,32 @@ def brute_force_cow_transport(cows,limit=10):
     transported on a particular trip and the overall list containing all the
     trips
     """
+
+    set_of_partitions = get_partitions(cows)
+    possible_trips = []
+
+    for partition in set_of_partitions:
+        flag = True
+        for set in partition:
+            counter = 0
+            for cow in set : 
+                counter += cows[cow]
+                if counter > 10:
+                    flag = False
+                    break          
+        if flag : 
+            possible_trips.append(partition)
+    
+    minTripsCount = len(possible_trips[0])
+    minTrip = possible_trips[0]
+    
+    for trip in possible_trips : 
+        if len(trip) < minTripsCount : 
+            minTripsCount = len(trip)
+            minTrip = trip
+
+    return minTrip    
+
         
 # Problem 4
 def compare_cow_transport_algorithms():
@@ -129,8 +155,16 @@ def main():
     ########### Problem 2 ############
     
     greedy_choosen = greedy_cow_transport(cow_dict)
-    print("Minimum Transport with Greedy : " , len(greedy_choosen))
-    # print(greedy_choosen)
+    print("Minimum Transport Count with Greedy : " , len(greedy_choosen))
+    # print("Minimum Transport with Greedy : " , greedy_choosen)
+
+
+    ########### Problem 3 ############
+    
+    brute_fort_choosen = brute_force_cow_transport(cow_dict)
+    print("Minimum Transport Count with Brute Force : " , len(brute_fort_choosen))
+    # print("Minimum Transport with Brute Force : " , brute_fort_choosen)
+
 
     
     
