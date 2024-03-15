@@ -137,8 +137,27 @@ def compare_cow_transport_algorithms():
     Returns:
     Does not return anything.
     """
-    # TODO: Your code here
-    pass
+
+    filename = 'ps1_cow_data.txt'
+    cows = load_cows(filename)
+
+    # Greedy Cow Transport
+    start_time = time.time()
+    greedy_result = greedy_cow_transport(cows)
+    end_time = time.time()
+    greedy_time = end_time - start_time
+    print("Greedy Cow Transport:")
+    print(f"Number of trips: {len(greedy_result)}")
+    print(f"Time taken: {greedy_time} seconds\n")
+
+    # Brute Force Cow Transport
+    start_time = time.time()
+    brute_force_result = brute_force_cow_transport(cows)
+    end_time = time.time()
+    brute_force_time = end_time - start_time
+    print("Brute Force Cow Transport:")
+    print(f"Number of trips: {len(brute_force_result)}")
+    print(f"Time taken: {brute_force_time} seconds")
 
 def removekey(d, key):
     r = dict(d)
@@ -146,6 +165,9 @@ def removekey(d, key):
     return r
 
 def main():
+
+    """
+
     ########### Problem 1 ############
     
     filename = 'ps1_cow_data.txt'
@@ -165,9 +187,12 @@ def main():
     print("Minimum Transport Count with Brute Force : " , len(brute_fort_choosen))
     # print("Minimum Transport with Brute Force : " , brute_fort_choosen)
 
+    """
+
+    ########### Problem 4 ############
+
+    compare_cow_transport_algorithms()
 
     
-    
-    greedy_cow_transport(cow_dict)
 if __name__ == "__main__":
     main()
