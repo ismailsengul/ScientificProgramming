@@ -1,0 +1,10 @@
+Betsy = Henrietta, Maggie
+Henrietta = Betsy
+Maggie = Betsy, Herman
+Herman = Milkshake, Maggie, Moo Moo
+Oreo = 
+Moo Moo = Herman
+Milkshake = Herman
+Millie = 
+Lola = Florence
+Florence = Lola
