@@ -1,7 +1,7 @@
 ###########################
 # 6.0002 Problem Set 1a: Space Cows 
-# Name:
-# Collaborators:
+# Name: Greedies
+# Collaborators: Ali Çolak, İsmail Şengül, Abdeljalil Azganin, Yaşar Burcu Açan
 # Time:
 
 from ps1_partition import get_partitions
