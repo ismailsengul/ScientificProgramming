@@ -13,6 +13,7 @@ var/
 .installed.cfg
 *.egg
 *.pyc
+*.DS_Store
 
 # Installer logs
 pip-log.txt
