@@ -25,7 +25,7 @@ class Node(object):
         return self.name
 
     def __eq__(self, other):
-        return self.name == other.name
+         return self.name == other.name
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -55,16 +55,18 @@ class Edge(object):
 
 class WeightedEdge(Edge):
     def __init__(self, src, dest, total_distance, outdoor_distance):
-        pass  # TODO
+        super().__init__(src, dest)
+        self.total_distance = total_distance
+        self.outdoor_distance = outdoor_distance
 
     def get_total_distance(self):
-        pass  # TODO
+        return self.total_distance
 
     def get_outdoor_distance(self):
-        pass  # TODO
+        return self.outdoor_distance
 
     def __str__(self):
-        pass  # TODO
+        return '{}->{} ({}, {})'.format(self.src, self.dest, self.total_distance, self.outdoor_distance)
 
 
 class Digraph(object):
@@ -90,14 +92,132 @@ class Digraph(object):
     def add_node(self, node):
         """Adds a Node object to the Digraph. Raises a ValueError if it is
         already in the graph."""
-        pass  # TODO
+        if node in self.nodes:
+            raise ValueError('Node already in graph')
+        else:
+            self.nodes.add(node)
+            self.edges[node] = []
 
     def add_edge(self, edge):
         """Adds an Edge or WeightedEdge instance to the Digraph. Raises a
         ValueError if either of the nodes associated with the edge is not
         in the  graph."""
-        pass  # TODO
+        
+        src = edge.get_source()
+        dest = edge.get_destination()
 
+        if self.has_node(src) and self.has_node(dest):
+            self.edges[src].append(edge)
+        else:
+            raise ValueError('Node not in graph')
+
+    """ Additional Methods """
+    
+    def get_nodes(self):
+        return self.nodes  
+      
+    def get_node(self, name):
+        for node in self.nodes:
+            if node.get_name() == name:
+                return node
+        raise NameError(name)  
+    
+    def get_edge_list(self):
+        edge_list = []
+        for edges in self.edges.values():
+            for edge in edges:
+                edge_list.append(edge)
+        return edge_list
+    
+    def get_edges(self):
+        return self.edges
+    
+    def get_edge(self, src, dest):
+        for edge in self.edges[src]:
+            if edge.get_destination() == dest:
+                return edge
+        raise NameError(src, dest)      
+    
+    def get_edges_for_node(self, node):
+        return self.edges[node]
+    
+    def get_children_for_node(self, node):
+        return [edge.get_destination() for edge in self.edges[node]]
+    
+    def get_parents_for_node(self, node):
+        parents = []
+        for n in self.nodes:
+            if node in self.get_children_for_node(n):
+                parents.append(n)
+        return parents
+    
+    def get_path_weight(self, path):
+        weight = 0
+        for i in range(len(path) - 1):
+            weight += self.get_edge(path[i], path[i+1]).get_total_distance()
+        return weight
+    
+    def get_outdoor_path_weight(self, path):
+        weight = 0
+        for i in range(len(path) - 1):
+            weight += self.get_edge(path[i], path[i+1]).get_outdoor_distance()
+        return weight
+    
+    def get_path(self, start, end, path = []):
+        path = path + [start]
+        if start == end:
+            return path
+        if start not in self.nodes:
+            raise ValueError('Node not in graph')
+        for node in self.get_children_for_node(start):
+            if node not in path:
+                newpath = self.get_path(node, end, path)
+                if newpath: 
+                    return newpath
+        return None
+    
+    def get_all_paths(self, start, end, path = []):
+        path = path + [start]
+        if start == end:
+            return [path]
+        if start not in self.nodes:
+            raise ValueError('Node not in graph')
+        paths = []
+        for node in self.get_children_for_node(start):
+            if node not in path:
+                newpaths = self.get_all_paths(node, end, path)
+                for newpath in newpaths:
+                    paths.append(newpath)
+        return paths
+    
+    def get_best_path(self, start, end, path = []):
+        paths = self.get_all_paths(start, end)
+        best_path = None
+        best_weight = None
+        for path in paths:
+            weight = self.get_path_weight(path)
+            if best_weight == None or weight < best_weight:
+                best_path = path
+                best_weight = weight
+        return best_path
+    
+    def get_best_outdoor_path(self, start, end, max_outdoor):
+        paths = self.get_all_paths(start, end)
+        best_path = None
+        best_weight = None
+        for path in paths:
+            weight = self.get_outdoor_path_weight(path)
+            if weight <= max_outdoor and (best_weight == None or weight < best_weight):
+                best_path = path
+                best_weight = weight
+        return best_path
+    
+    def get_best_path_weight(self, start, end):
+        return self.get_path_weight(self.get_best_path(start, end))
+    
+    def get_best_outdoor_path_weight(self, start, end, max_outdoor):
+        return self.get_outdoor_path_weight(self.get_best_outdoor_path(start, end, max_outdoor))
+    
 
 # ================================================================
 # Begin tests -- you do not need to modify anything below this line
