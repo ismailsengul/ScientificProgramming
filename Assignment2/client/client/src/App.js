@@ -1,5 +1,16 @@
 import logo from './logo.svg';
 import './App.css';
+import axios from 'axios';
+
+function getMessage() {
+  axios.get('http://localhost:8000/hello') 
+    .then(function (response) {
+      console.log(response);
+    })
+    .catch(function (error) {
+      console.error(error);
+    });
+}
 
 function App() {
   return (
@@ -9,14 +20,8 @@ function App() {
         <p>
           Edit <code>src/App.js</code> and save to reload.
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+
+        <button onClick={getMessage}>Click me</button>
       </header>
     </div>
   );
