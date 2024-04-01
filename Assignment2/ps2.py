@@ -123,7 +123,7 @@ def get_best_path(digraph, start, end, path, max_dist_outdoors, best_dist,
         return None  
     
     if digraph.has_node(digraph.get_node(start)) == False or digraph.has_node(digraph.get_node(end)) == False:
-        raise ValueError("Node not in graph")
+        return None
     elif start == end:
         return path 
     
@@ -146,7 +146,207 @@ def get_best_path(digraph, start, end, path, max_dist_outdoors, best_dist,
         
     return [best_path, best_dist]
         
+def get_best_path_with_stops(digraph, start, end, path, max_dist_outdoors, best_dist,
+                  best_path, stops=[]):
+    """
+    Finds the shortest path between buildings subject to constraints.
 
+    Parameters:
+        digraph: Digraph instance
+            The graph on which to carry out the search
+        start: string
+            Building number at which to start
+        end: string
+            Building number at which to end
+        path: list composed of [[list of strings], int, int]
+            Represents the current path of nodes being traversed. Contains
+            a list of node names, total distance traveled, and total
+            distance outdoors.
+        max_dist_outdoors: int
+            Maximum distance spent outdoors on a path
+        best_dist: int
+            The smallest distance between the original start and end node
+            for the initial problem that you are trying to solve
+        best_path: list of strings
+            The shortest path found so far between the original start
+            and end node.
+        stops: list of strings, optional
+            Intermediate stops to be visited on the way to the destination
+
+    Returns:
+        A tuple with the shortest-path from start to end, represented by
+        a list of building numbers (in strings), [n_1, n_2, ..., n_k],
+        where there exists an edge from n_i to n_(i+1) in digraph,
+        for all 1 <= i < k and the distance of that path.
+
+        If there exists no path that satisfies max_total_dist and
+        max_dist_outdoors constraints, then return None.
+    """
+
+    # find all paths from start to end with stopping by at every stop
+        
+    if len(stops) == 0:
+        return get_best_path(digraph, start, end, path, max_dist_outdoors, best_dist, best_path)
+    
+    ## find all paths from start to stop
+    
+    start_node = digraph.get_node(start)
+    end_node = digraph.get_node(end)
+    all_paths = digraph.get_all_paths(start_node, end_node)
+    
+    best_path = [[], None]
+    
+    # iterate all paths  if the stop is in the path and more than best path distance update best path
+    for path in all_paths:
+        flag = True
+        for stop in stops:
+            stopNode = digraph.get_node(stop)
+            if stopNode not in path:
+                flag = False
+                break
+        if flag:
+            path = [path, digraph.get_path_weight(path)]
+            if best_path[1] == None or path[1] < best_path[1]:
+                best_path = path
+                
+    return best_path
+
+def get_best_path_with_closed(digraph, start, end, path, max_dist_outdoors, best_dist, best_path, closed=[]):
+    """
+    Finds the shortest path between buildings subject to constraints.
+
+    Parameters:
+        digraph: Digraph instance
+            The graph on which to carry out the search
+        start: string
+            Building number at which to start
+        end: string
+            Building number at which to end
+        path: list composed of [[list of strings], int, int]
+            Represents the current path of nodes being traversed. Contains
+            a list of node names, total distance traveled, and total
+            distance outdoors.
+        max_dist_outdoors: int
+            Maximum distance spent outdoors on a path
+        best_dist: int
+            The smallest distance between the original start and end node
+            for the initial problem that you are trying to solve
+        best_path: list of strings
+            The shortest path found so far between the original start
+            and end node.
+        closed: list of strings, optional
+            Buildings that are closed and cannot be visited
+
+    Returns:
+        A tuple with the shortest-path from start to end, represented by
+        a list of building numbers (in strings), [n_1, n_2, ..., n_k],
+        where there exists an edge from n_i to n_(i+1) in digraph,
+        for all 1 <= i < k and the distance of that path.
+
+        If there exists no path that satisfies max_total_dist and
+        max_dist_outdoors constraints, then return None.
+    """
+    
+    if len(closed) == 0:
+        return get_best_path(digraph, start, end, path, max_dist_outdoors, best_dist, best_path)
+    
+    ## find all paths from start to stop
+    
+    start_node = digraph.get_node(start)
+    end_node = digraph.get_node(end)
+    all_paths = digraph.get_all_paths(start_node, end_node)
+    
+    best_path = [[], None]
+    
+    # iterate all paths  if the stop is in the path and more than best path distance update best path
+    
+    for path in all_paths:
+        flag = True
+        for stop in closed:
+            stopNode = digraph.get_node(stop)
+            if stopNode in path:
+                flag = False
+                break
+        if flag:
+            path = [path, digraph.get_path_weight(path)]
+            if best_path[1] == None or path[1] < best_path[1]:
+                best_path = path
+                
+    return best_path                       
+                
+
+def get_best_path_with_stops_and_closed(digraph, start, end, path, max_dist_outdoors, best_dist,
+                  best_path, stops=[],closed=[]):
+    """
+    Finds the shortest path between buildings subject to constraints.
+
+    Parameters:
+        digraph: Digraph instance
+            The graph on which to carry out the search
+        start: string
+            Building number at which to start
+        end: string
+            Building number at which to end
+        path: list composed of [[list of strings], int, int]
+            Represents the current path of nodes being traversed. Contains
+            a list of node names, total distance traveled, and total
+            distance outdoors.
+        max_dist_outdoors: int
+            Maximum distance spent outdoors on a path
+        best_dist: int
+            The smallest distance between the original start and end node
+            for the initial problem that you are trying to solve
+        best_path: list of strings
+            The shortest path found so far between the original start
+            and end node.
+        stops: list of strings, optional
+            Intermediate stops to be visited on the way to the destination
+
+    Returns:
+        A tuple with the shortest-path from start to end, represented by
+        a list of building numbers (in strings), [n_1, n_2, ..., n_k],
+        where there exists an edge from n_i to n_(i+1) in digraph,
+        for all 1 <= i < k and the distance of that path.
+
+        If there exists no path that satisfies max_total_dist and
+        max_dist_outdoors constraints, then return None.
+    """
+
+    # find all paths from start to end with stopping by at every stop
+        
+    if len(stops) == 0 and len(closed) == 0:
+        return get_best_path(digraph, start, end, path, max_dist_outdoors, best_dist, best_path)
+    
+    ## find all paths from start to stop
+    
+    start_node = digraph.get_node(start)
+    end_node = digraph.get_node(end)
+    
+    all_paths = digraph.get_all_paths(start_node, end_node)
+    
+    best_path = [[], None]
+    
+    # iterate all paths  if the stop is in the path and more than best path distance update best path
+    
+    for path in all_paths:
+        flag = True
+        for stop in stops:
+            stopNode = digraph.get_node(stop)
+            if stopNode not in path:
+                flag = False
+                break
+        for stop in closed:
+            stopNode = digraph.get_node(stop)
+            if stopNode in path:
+                flag = False
+                break
+        if flag:
+            path = [path, digraph.get_path_weight(path)]
+            if best_path[1] == None or path[1] < best_path[1]:
+                best_path = path
+                
+    return best_path
+     
 
 # Problem 3c: Implement directed_dfs
 def directed_dfs(digraph, start, end, max_total_dist, max_dist_outdoors):
@@ -181,13 +381,128 @@ def directed_dfs(digraph, start, end, max_total_dist, max_dist_outdoors):
     best_path = get_best_path(digraph, start, end, path, max_dist_outdoors, None, None)
     
     if best_path[1] == None:
-        raise ValueError("No path found")
+        return None
     else:
         if best_path[1] > max_total_dist:
-            raise ValueError("Result exceeds the maximum distance")
+            return None
         else: 
-            return best_path[0]
+            return best_path
         
+        
+# Problem 3c: Implement directed_dfs
+def directed_dfs_with_stops(digraph, start, end, max_total_dist, max_dist_outdoors,stops=[]):
+    """
+    Finds the shortest path from start to end using a directed depth-first
+    search. The total distance traveled on the path must not
+    exceed max_total_dist, and the distance spent outdoors on this path must
+    not exceed max_dist_outdoors.
+
+    Parameters:
+        digraph: Digraph instance
+            The graph on which to carry out the search
+        start: string
+            Building number at which to start
+        end: string
+            Building number at which to end
+        max_total_dist: int
+            Maximum total distance on a path
+        max_dist_outdoors: int
+            Maximum distance spent outdoors on a path
+
+    Returns:
+        The shortest-path from start to end, represented by
+        a list of building numbers (in strings), [n_1, n_2, ..., n_k],
+        where there exists an edge from n_i to n_(i+1) in digraph,
+        for all 1 <= i < k
+
+        If there exists no path that satisfies max_total_dist and
+        max_dist_outdoors constraints, then raises a ValueError.
+    """
+    path = [[], 0, 0]
+    best_path = get_best_path_with_stops(digraph, start, end, path, max_dist_outdoors, None, None,stops)
+    if best_path[1] == None:
+        return None
+    else:
+        if best_path[1] > max_total_dist:
+            return None
+        else: 
+            return best_path
+        
+def directed_dfs_with_closed(digraph, start, end, max_total_dist, max_dist_outdoors,closed=[]):
+    """
+    Finds the shortest path from start to end using a directed depth-first
+    search. The total distance traveled on the path must not
+    exceed max_total_dist, and the distance spent outdoors on this path must
+    not exceed max_dist_outdoors.
+
+    Parameters:
+        digraph: Digraph instance
+            The graph on which to carry out the search
+        start: string
+            Building number at which to start
+        end: string
+            Building number at which to end
+        max_total_dist: int
+            Maximum total distance on a path
+        max_dist_outdoors: int
+            Maximum distance spent outdoors on a path
+
+    Returns:
+        The shortest-path from start to end, represented by
+        a list of building numbers (in strings), [n_1, n_2, ..., n_k],
+        where there exists an edge from n_i to n_(i+1) in digraph,
+        for all 1 <= i < k
+
+        If there exists no path that satisfies max_total_dist and
+        max_dist_outdoors constraints, then raises a ValueError.
+    """
+    path = [[], 0, 0]
+    best_path = get_best_path_with_closed(digraph, start, end, path, max_dist_outdoors, None, None,closed)
+    if best_path[1] == None:
+        return None
+    else:
+        if best_path[1] > max_total_dist:
+            return None
+        else: 
+            return best_path
+        
+def directed_dfs_with_stops_and_closed(digraph, start, end, max_total_dist, max_dist_outdoors,stops=[],closed=[]):
+    """
+    Finds the shortest path from start to end using a directed depth-first
+    search. The total distance traveled on the path must not
+    exceed max_total_dist, and the distance spent outdoors on this path must
+    not exceed max_dist_outdoors.
+
+    Parameters:
+        digraph: Digraph instance
+            The graph on which to carry out the search
+        start: string
+            Building number at which to start
+        end: string
+            Building number at which to end
+        max_total_dist: int
+            Maximum total distance on a path
+        max_dist_outdoors: int
+            Maximum distance spent outdoors on a path
+
+    Returns:
+        The shortest-path from start to end, represented by
+        a list of building numbers (in strings), [n_1, n_2, ..., n_k],
+        where there exists an edge from n_i to n_(i+1) in digraph,
+        for all 1 <= i < k
+
+        If there exists no path that satisfies max_total_dist and
+        max_dist_outdoors constraints, then raises a ValueError.
+    """
+    path = [[], 0, 0]
+    best_path = get_best_path_with_stops_and_closed(digraph, start, end, path, max_dist_outdoors, None, None,stops,closed)
+    if best_path[1] == None:
+        return None
+    else:
+        if best_path[1] > max_total_dist:
+            return None
+        else: 
+            return best_path
 
 
 # ================================================================
@@ -198,7 +513,7 @@ class Ps2Test(unittest.TestCase):
     LARGE_DIST = 99999
 
     def setUp(self):
-        self.graph = load_map("Assignment2/mit_map.txt")
+        self.graph = load_map("mit_map.txt")
 
     def test_load_map_basic(self):
         self.assertTrue(isinstance(self.graph, Digraph))

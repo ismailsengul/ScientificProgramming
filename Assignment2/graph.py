@@ -17,6 +17,9 @@ class Node(object):
 
     def get_name(self):
         return self.name
+    
+    def __json__(self):
+        return {'name': self.name}
 
     def __str__(self):
         return self.name
@@ -176,48 +179,28 @@ class Digraph(object):
                     return newpath
         return None
     
-    def get_all_paths(self, start, end, path = []):
+    
+    def get_all_paths(self, start, end, path=[]):
+        # Yol listesi oluşturulur
         path = path + [start]
+        
+        # Başlangıç ve bitiş noktaları aynıysa, bulunan yolu döndür
         if start == end:
             return [path]
+        
+        # Başlangıç noktası grafiğimizde değilse hata fırlat
         if start not in self.nodes:
             raise ValueError('Node not in graph')
+        
+        # Başlangıç noktasından çıkılan her çocuk için rekürsif olarak tüm yolları bul
         paths = []
         for node in self.get_children_for_node(start):
             if node not in path:
-                newpaths = self.get_all_paths(node, end, path)
-                for newpath in newpaths:
-                    paths.append(newpath)
+                new_paths = self.get_all_paths(node, end, path)
+                for new_path in new_paths:
+                    paths.append(new_path)
+        
         return paths
-    
-    def get_best_path(self, start, end, path = []):
-        paths = self.get_all_paths(start, end)
-        best_path = None
-        best_weight = None
-        for path in paths:
-            weight = self.get_path_weight(path)
-            if best_weight == None or weight < best_weight:
-                best_path = path
-                best_weight = weight
-        return best_path
-    
-    def get_best_outdoor_path(self, start, end, max_outdoor):
-        paths = self.get_all_paths(start, end)
-        best_path = None
-        best_weight = None
-        for path in paths:
-            weight = self.get_outdoor_path_weight(path)
-            if weight <= max_outdoor and (best_weight == None or weight < best_weight):
-                best_path = path
-                best_weight = weight
-        return best_path
-    
-    def get_best_path_weight(self, start, end):
-        return self.get_path_weight(self.get_best_path(start, end))
-    
-    def get_best_outdoor_path_weight(self, start, end, max_outdoor):
-        return self.get_outdoor_path_weight(self.get_best_outdoor_path(start, end, max_outdoor))
-    
 
 # ================================================================
 # Begin tests -- you do not need to modify anything below this line
