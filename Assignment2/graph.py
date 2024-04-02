@@ -1,8 +1,8 @@
 # 6.0002 Problem Set 5
 # Graph optimization
-# Name:
-# Collaborators:
-# Time:
+# Name: Greedies
+# Collaborators: Ali Çolak, İsmail Şengül, Abdeljalil Azganin, Yaşar Burcu Açan
+# Time: 01/04/2024 Spring 2024 
 
 import unittest
 
