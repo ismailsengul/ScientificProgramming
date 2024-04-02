@@ -39,7 +39,6 @@
 
 
 .card {
-  height: 700px;
   background-color: #f1f1f1;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -65,11 +64,12 @@
 .card-body {
   padding: 20px;
   text-align: center;
+  
 }
 
 
 .form-group {
-  margin-bottom: 20px;
+    margin-bottom: 20px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -109,8 +109,6 @@
   background-color: #555;
 }
 
-.btn-primary {
-  background-color: #007bff;
-}
+
 
 
