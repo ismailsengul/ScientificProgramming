@@ -1,11 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.5
-
-# Name: Greedies
-# Collaborators: Ali Çolak, İsmail Şengül, Abdeljalil Azganin, Yaşar Burcu Açan
-# Time: 09/04/2024 Spring 2024 
-
-
+# v0.19.40
 
 using Markdown
 using InteractiveUtils
@@ -13,8 +7,9 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
 end
@@ -46,8 +41,134 @@ begin
 	using BenchmarkTools
 end
 
+# ╔═╡ 33e43c7c-f381-11ea-3abc-c942327456b1
+# edit the code below to set your name and kerberos ID (i.e. email without @mit.edu)
+
+student = (name = "Greedies", kerberos_id = "akdenizcse")
+
+# you might need to wait until all other cells in this notebook have completed running. 
+# scroll around the page to see what's up
+
+# ╔═╡ 0d144802-f319-11ea-0028-cd97a776a3d0
+# ╠═╡ disabled = true
+#=╠═╡
+#img = load(download("https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Piet_Mondriaan%2C_1930_-_Mondrian_Composition_II_in_Red%2C_Blue%2C_and_Yellow.jpg/300px-Piet_Mondriaan%2C_1930_-_Mondrian_Composition_II_in_Red%2C_Blue%2C_and_Yellow.jpg"))
+#img = load(download("https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Hilma_af_Klint_-_Group_IX_SUW%2C_The_Swan_No._1_%2813947%29.jpg/477px-Hilma_af_Klint_-_Group_IX_SUW%2C_The_Swan_No._1_%2813947%29.jpg"))
+img = load(download("https://i.imgur.com/4SRnmkj.png"))
+  ╠═╡ =#
+
+# ╔═╡ b49a21a6-f381-11ea-1a98-7f144c55c9b7
+html"""
+<iframe width="100%" height="450px" src="https://www.youtube.com/embed/gTGJ80HayK0?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+"""
+
+# ╔═╡ e501ea28-f326-11ea-252a-53949fd9ef57
+performance_experiment_default = @benchmark remove_in_each_row(img, 1:size(img, 1))
+
+# ╔═╡ 67717d02-f327-11ea-0988-bfe661f57f77
+performance_experiment_without_vcat = @benchmark remove_in_each_row_no_vcat(img, 1:size(img, 1))
+
+# ╔═╡ 8aec4ea0-030e-11eb-2a63-7dc5fbc07457
+@benchmark test_copy = copy(img)
+
+# ╔═╡ 3335e07c-f328-11ea-0e6c-8d38c8c0ad5b
+performance_experiment_views = @benchmark begin
+	remove_in_each_row_views(img, 1:size(img, 1))
+end
+
+# ╔═╡ 4f0975d8-f329-11ea-3d10-59a503f8d6b2
+(
+	default = performance_experiment_default, 
+	without_vcat = performance_experiment_without_vcat,
+	views = performance_experiment_views,
+)
+
+# ╔═╡ 6c7e4b54-f318-11ea-2055-d9f9c0199341
+begin
+	brightness(c::RGB) = mean((c.r, c.g, c.b))
+	brightness(c::RGBA) = mean((c.r, c.g, c.b))
+end
+
+# ╔═╡ 74059d04-f319-11ea-29b4-85f5f8f5c610
+#=╠═╡
+Gray.(brightness.(img))
+  ╠═╡ =#
+
+# ╔═╡ d184e9cc-f318-11ea-1a1e-994ab1330c1a
+convolve(img, k) = imfilter(img, reflect(k)) # uses ImageFiltering.jl package
+# behaves the same way as the `convolve` function used in Lecture 2
+# You were asked to implement this in homework 1.
+
+# ╔═╡ cdfb3508-f319-11ea-1486-c5c58a0b9177
+float_to_color(x) = RGB(max(0, -x), max(0, x), 0)
+
+# ╔═╡ 6f37b34c-f31a-11ea-2909-4f2079bf66ec
+begin
+	energy(∇x, ∇y) = sqrt.(∇x.^2 .+ ∇y.^2)
+	function energy(img)
+		∇y = convolve(brightness.(img), Kernel.sobel()[1])
+		∇x = convolve(brightness.(img), Kernel.sobel()[2])
+		energy(∇x, ∇y)
+	end
+end
+
+# ╔═╡ 9fa0cd3a-f3e1-11ea-2f7e-bd73b8e3f302
+#=╠═╡
+float_to_color.(energy(img))
+  ╠═╡ =#
+
+# ╔═╡ f5a74dfc-f388-11ea-2577-b543d31576c6
+html"""
+<iframe width="100%" height="450px" src="https://www.youtube.com/embed/rpB6zQNsbQU?start=777&end=833" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+"""
+
+# ╔═╡ 2f9cbea8-f3a1-11ea-20c6-01fd1464a592
+random_seam(m, n, i) = reduce((a, b) -> [a..., clamp(last(a) + rand(-1:1), 1, n)], 1:m-1; init=[i])
+
+# ╔═╡ f580527e-f397-11ea-055f-bb9ea8f12015
+# try
+# 	if length(Set(greedy_seam(greedy_test, 5))) == 1
+# 		md"Right now you are seeing the placeholder function. (You haven't done the exercise yet!) This is a straight line from the starting pixel."
+# 	end
+# catch end
+
+# ╔═╡ 7ddee6fc-f394-11ea-31fc-5bd665a65bef
+greedy_test = Gray.(rand(Float64, (8,10)));
+
+# ╔═╡ 2a98f268-f3b6-11ea-1eea-81c28256a19e
+function fib(n)
+    # base case (basis)
+	if n == 0 || n == 1      # `||` means "or"
+		return 1
+	end
+
+    # recursion (induction)
+	return fib(n-1) + fib(n-2)
+end
+
+# ╔═╡ cbf29020-f3ba-11ea-2cb0-b92836f3d04b
+begin
+	struct AccessTrackerArray{T,N} <: AbstractArray{T, N}
+		data::Array{T,N}
+		accesses::Ref{Int}
+	end
+	track_access(x) = AccessTrackerArray(x, Ref(0))
+	
+	Base.IndexStyle(::Type{AccessTrackerArray}) = IndexLinear()
+	
+	Base.size(x::AccessTrackerArray) = size(x.data)
+	Base.getindex(x::AccessTrackerArray, i::Int...) = (x.accesses[] += 1; x.data[i...])
+	Base.setindex!(x::AccessTrackerArray, v, i...) = (x.accesses[] += 1; x.data[i...] = v;)
+end
+
 # ╔═╡ e6b6760a-f37f-11ea-3ae1-65443ef5a81a
 md"_homework 2, version 2.1_"
+
+# ╔═╡ ec66314e-f37f-11ea-0af4-31da0584e881
+md"""
+
+Submission by: **_$(student.name)_** ($(student.kerberos_id)@mit.edu)
+"""
 
 # ╔═╡ 85cfbd10-f384-11ea-31dc-b5693630a4c5
 md"""
@@ -62,27 +183,8 @@ _For MIT students:_ there will also be some additional (secret) test cases that 
 Feel free to ask questions!
 """
 
-# ╔═╡ 33e43c7c-f381-11ea-3abc-c942327456b1
-# edit the code below to set your name and kerberos ID (i.e. email without @mit.edu)
-
-student = (name = "Greedies", kerberos_id = "akdenizcse")
-
-# you might need to wait until all other cells in this notebook have completed running. 
-# scroll around the page to see what's up
-
-# ╔═╡ ec66314e-f37f-11ea-0af4-31da0584e881
-md"""
-
-Submission by: **_$(student.name)_** ($(student.kerberos_id)@mit.edu)
-"""
-
 # ╔═╡ 938185ec-f384-11ea-21dc-b56b7469f798
 md"_Let's create a package environment:_"
-
-# ╔═╡ 0d144802-f319-11ea-0028-cd97a776a3d0
-#img = load(download("https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Piet_Mondriaan%2C_1930_-_Mondrian_Composition_II_in_Red%2C_Blue%2C_and_Yellow.jpg/300px-Piet_Mondriaan%2C_1930_-_Mondrian_Composition_II_in_Red%2C_Blue%2C_and_Yellow.jpg"))
-#img = load(download("https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Hilma_af_Klint_-_Group_IX_SUW%2C_The_Swan_No._1_%2813947%29.jpg/477px-Hilma_af_Klint_-_Group_IX_SUW%2C_The_Swan_No._1_%2813947%29.jpg"))
-img = load(download("https://i.imgur.com/4SRnmkj.png"))
 
 # ╔═╡ cc9fcdae-f314-11ea-1b9a-1f68b792f005
 md"""
@@ -91,11 +193,6 @@ md"""
 In the lecture (included below) we learned about what array views are. In this exercise we will add to that understanding and look at an important use of `view`s: to reduce the amount of memory allocations when reading sub-sequences within an array.
 
 We will use the `BenchmarkTools` package to emperically understand the effects of using views.
-"""
-
-# ╔═╡ b49a21a6-f381-11ea-1a98-7f144c55c9b7
-html"""
-<iframe width="100%" height="450px" src="https://www.youtube.com/embed/gTGJ80HayK0?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 """
 
 # ╔═╡ b49e8cc8-f381-11ea-1056-91668ac6ae4e
@@ -126,7 +223,9 @@ end
 md"Let's use it to remove the pixels on the diagonal. These are the image dimensions before and after doing so:"
 
 # ╔═╡ 9cced1a8-f326-11ea-0759-0b2f22e5a1db
+#=╠═╡
 (before=size(img), after=size(remove_in_each_row(img, 1:size(img, 1))))
+  ╠═╡ =#
 
 # ╔═╡ 1d893998-f366-11ea-0828-512de0c44915
 md"""
@@ -141,9 +240,6 @@ We can use the `@benchmark` macro from the [BenchmarkTools.jl](https://github.co
 md"""
 First, as an example, let's benchmark the `remove_in_each_row` function we defined above by passing in our image and a some indices to remove.
 """
-
-# ╔═╡ e501ea28-f326-11ea-252a-53949fd9ef57
-performance_experiment_default = @benchmark remove_in_each_row(img, 1:size(img, 1))
 
 # ╔═╡ f7915918-f366-11ea-2c46-2f4671ae8a22
 md"""
@@ -173,9 +269,6 @@ function remove_in_each_row_no_vcat(img, column_numbers)
 	img′
 end
 
-# ╔═╡ 67717d02-f327-11ea-0988-bfe661f57f77
-performance_experiment_without_vcat = @benchmark remove_in_each_row_no_vcat(img, 1:size(img, 1))
-
 # ╔═╡ 9e149cd2-f367-11ea-28ef-b9533e8a77bb
 md"""
 If you did it correctly, you should see that this benchmark shows the function running faster! And "memory estimate" should also show a smaller number, and so should "allocs estimate" which is the number of allocations done per call.
@@ -187,9 +280,6 @@ md"""
 
 👉 How many estimated allocations did this optimization reduce, and how can you explain most of them?
 """
-
-# ╔═╡ 8aec4ea0-030e-11eb-2a63-7dc5fbc07457
-@benchmark test_copy = copy(img)
 
 # ╔═╡ e49235a4-f367-11ea-3913-f54a4a6b2d6b
 no_vcat_observation = md"""
@@ -225,23 +315,13 @@ function remove_in_each_row_views(img, column_numbers)
 	img′
 end
 
-# ╔═╡ 3335e07c-f328-11ea-0e6c-8d38c8c0ad5b
-performance_experiment_views = @benchmark begin
-	remove_in_each_row_views(img, 1:size(img, 1))
-end
-
 # ╔═╡ 40d6f562-f329-11ea-2ee4-d7806a16ede3
 md"Final tally:"
 
-# ╔═╡ 4f0975d8-f329-11ea-3d10-59a503f8d6b2
-(
-	default = performance_experiment_default, 
-	without_vcat = performance_experiment_without_vcat,
-	views = performance_experiment_views,
-)
-
 # ╔═╡ dc63d32a-f387-11ea-37e2-6f3666a72e03
+#=╠═╡
 ⧀(a, b) = minimum(a).allocs + size(img, 1) ÷ 2  < minimum(b).allocs;
+  ╠═╡ =#
 
 # ╔═╡ 7eaa57d2-f368-11ea-1a70-c7c7e54bd0b1
 md"""
@@ -271,44 +351,14 @@ First, we will define a `brightness` function for a pixel (a color) as the mean 
 You should use this function whenever the problem set asks you to deal with _brightness_ of a pixel.
 """
 
-# ╔═╡ 6c7e4b54-f318-11ea-2055-d9f9c0199341
-begin
-	brightness(c::RGB) = mean((c.r, c.g, c.b))
-	brightness(c::RGBA) = mean((c.r, c.g, c.b))
-end
-
-# ╔═╡ 74059d04-f319-11ea-29b4-85f5f8f5c610
-Gray.(brightness.(img))
-
 # ╔═╡ 0b9ead92-f318-11ea-3744-37150d649d43
 md"""We provide you with a convolve function below.
 """
-
-# ╔═╡ d184e9cc-f318-11ea-1a1e-994ab1330c1a
-convolve(img, k) = imfilter(img, reflect(k)) # uses ImageFiltering.jl package
-# behaves the same way as the `convolve` function used in Lecture 2
-# You were asked to implement this in homework 1.
-
-# ╔═╡ cdfb3508-f319-11ea-1486-c5c58a0b9177
-float_to_color(x) = RGB(max(0, -x), max(0, x), 0)
 
 # ╔═╡ 5fccc7cc-f369-11ea-3b9e-2f0eca7f0f0e
 md"""
 finally we define the `energy` function which takes the Sobel gradients along x and y directions and computes the norm of the gradient for each pixel.
 """
-
-# ╔═╡ 6f37b34c-f31a-11ea-2909-4f2079bf66ec
-begin
-	energy(∇x, ∇y) = sqrt.(∇x.^2 .+ ∇y.^2)
-	function energy(img)
-		∇y = convolve(brightness.(img), Kernel.sobel()[1])
-		∇x = convolve(brightness.(img), Kernel.sobel()[2])
-		energy(∇x, ∇y)
-	end
-end
-
-# ╔═╡ 9fa0cd3a-f3e1-11ea-2f7e-bd73b8e3f302
-float_to_color.(energy(img))
 
 # ╔═╡ 87afabf8-f317-11ea-3cb3-29dced8e265a
 md"""
@@ -333,18 +383,10 @@ The first approach discussed in the lecture (included below) is the _greedy appr
 
 """
 
-# ╔═╡ f5a74dfc-f388-11ea-2577-b543d31576c6
-html"""
-<iframe width="100%" height="450px" src="https://www.youtube.com/embed/rpB6zQNsbQU?start=777&end=833" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-"""
-
 # ╔═╡ c3543ea4-f393-11ea-39c8-37747f113b96
 md"""
 👉 Implement the greedy approach.
 """
-
-# ╔═╡ 2f9cbea8-f3a1-11ea-20c6-01fd1464a592
-random_seam(m, n, i) = reduce((a, b) -> [a..., clamp(last(a) + rand(-1:1), 1, n)], 1:m-1; init=[i])
 
 # ╔═╡ abf20aa0-f31b-11ea-2548-9bea4fab4c37
 function greedy_seam(energies, starting_pixel::Int)
@@ -366,16 +408,6 @@ end
 # ╔═╡ 5430d772-f397-11ea-2ed8-03ee06d02a22
 md"Before we apply your function to our test image, let's try it out on a small matrix of energies (displayed here in grayscale), just like in the lecture snippet above (clicking on the video will take you to the right part of the video). Light pixels have high energy, dark pixels signify low energy."
 
-# ╔═╡ f580527e-f397-11ea-055f-bb9ea8f12015
-# try
-# 	if length(Set(greedy_seam(greedy_test, 5))) == 1
-# 		md"Right now you are seeing the placeholder function. (You haven't done the exercise yet!) This is a straight line from the starting pixel."
-# 	end
-# catch end
-
-# ╔═╡ 7ddee6fc-f394-11ea-31fc-5bd665a65bef
-greedy_test = Gray.(rand(Float64, (8,10)));
-
 # ╔═╡ 6f52c1a2-f395-11ea-0c8a-138a77f03803
 md"Starting pixel: $(@bind greedy_starting_pixel Slider(1:size(greedy_test, 2); show_value=true))"
 
@@ -395,17 +427,6 @@ The classic example, is a [Fibonacci number](https://en.wikipedia.org/wiki/Fibon
 
 The recursive implementation of Fibonacci looks something like this
 """
-
-# ╔═╡ 2a98f268-f3b6-11ea-1eea-81c28256a19e
-function fib(n)
-    # base case (basis)
-	if n == 0 || n == 1      # `||` means "or"
-		return 1
-	end
-
-    # recursion (induction)
-	return fib(n-1) + fib(n-2)
-end
 
 # ╔═╡ 32e9a944-f3b6-11ea-0e82-1dff6c2eef8d
 md"""
@@ -466,21 +487,6 @@ This is so elegant, correct, but inefficient! If you **check this checkbox** $(@
 
 # ╔═╡ 18e0fd8a-f3bc-11ea-0713-fbf74d5fa41a
 md"Whoa!"
-
-# ╔═╡ cbf29020-f3ba-11ea-2cb0-b92836f3d04b
-begin
-	struct AccessTrackerArray{T,N} <: AbstractArray{T, N}
-		data::Array{T,N}
-		accesses::Ref{Int}
-	end
-	track_access(x) = AccessTrackerArray(x, Ref(0))
-	
-	Base.IndexStyle(::Type{AccessTrackerArray}) = IndexLinear()
-	
-	Base.size(x::AccessTrackerArray) = size(x.data)
-	Base.getindex(x::AccessTrackerArray, i::Int...) = (x.accesses[] += 1; x.data[i...])
-	Base.setindex!(x::AccessTrackerArray, v, i...) = (x.accesses[] += 1; x.data[i...] = v;)
-end
 
 # ╔═╡ 8bc930f0-f372-11ea-06cb-79ced2834720
 md"""
@@ -740,6 +746,149 @@ if student.kerberos_id === "jazz"
 	"""
 end
 
+# ╔═╡ bdaf6b60-817c-4683-87fc-c624570a6fc6
+function compute_energies(image)
+    height, width = size(image)[1:2]
+    energies = zeros(height, width)
+    for i in 1:height
+        for j in 1:width
+            energies[i, j] = rand()  # Gerçek enerji hesaplamasını burada yapabilirsiniz
+        end
+    end
+    return energies
+end
+
+# ╔═╡ 1729d753-3501-4fb5-bd1a-43ce7b87e934
+function topdown_least_energy(energies)
+    height, width = size(energies)
+    memory = Dict{Tuple{Int, Int}, Float64}()
+
+    function compute_energy(i, j)
+        @assert 1 ≤ i ≤ height
+        @assert 1 ≤ j ≤ width
+
+        if i == 1
+            memory[i, j] = energies[i, j]
+            return memory[i, j]
+        end
+
+        if haskey(memory, (i, j))
+            return memory[i, j]
+        end
+
+        mid_energy = compute_energy(i - 1, j)
+        left_energy = mid_energy
+        right_energy = mid_energy
+        if j > 1
+            left_energy = compute_energy(i - 1, j - 1)
+        end
+        if j < width
+            right_energy = compute_energy(i - 1, j + 1)
+        end
+
+        next_least_energy = min(left_energy, mid_energy, right_energy)
+        sum_least_energy = energies[i, j] + next_least_energy
+        @assert !haskey(memory, (i, j))
+        memory[i, j] = sum_least_energy
+        return memory[i, j]
+    end
+
+    for j in 1:width
+        compute_energy(height, j)
+    end
+
+    return memory
+end
+
+# ╔═╡ d3d4012a-e1b3-4e9f-b9bf-d6c5c8f77f6b
+function find_vertical_seam(memory, energies)
+    height, width = size(energies)
+    seam = Vector{Int}(undef, height)
+
+    # height satırındaki minimum enerji değerini bul
+    min_energy = Inf
+    start_j = 1
+    for j in 1:width
+        if memory[(height, j)] < min_energy
+            min_energy = memory[(height, j)]
+            start_j = j
+        end
+    end
+    seam[height] = start_j
+
+    for i in height-1:-1:1
+        prev_j = seam[i + 1]
+        min_j = prev_j
+        min_energy = memory[(i, prev_j)]
+
+        if prev_j > 1 && memory[(i, prev_j - 1)] < min_energy
+            min_j = prev_j - 1
+            min_energy = memory[(i, prev_j - 1)]
+        end
+        if prev_j < width && memory[(i, prev_j + 1)] < min_energy
+            min_j = prev_j + 1
+            min_energy = memory[(i, prev_j + 1)]
+        end
+
+        seam[i] = min_j
+    end
+
+    return seam
+end
+
+
+# ╔═╡ a9eb5769-f524-458f-8fc5-7ac5d9e80c79
+function remove_seam(img, seam)
+    height, width = size(img)
+    channels = ndims(img) == 3 ? size(img, 3) : 1
+
+    if channels == 1
+        new_img = Array{eltype(img), 2}(undef, height, width - 1)
+        for i in 1:height
+            new_img[i, 1:seam[i] - 1] = img[i, 1:seam[i] - 1]
+            new_img[i, seam[i]:end] = img[i, seam[i] + 1:end]
+        end
+    else
+        new_img = Array{eltype(img), 3}(undef, height, width - 1, channels)
+        for i in 1:height
+            new_img[i, 1:seam[i] - 1, :] = img[i, 1:seam[i] - 1, :]
+            new_img[i, seam[i]:end, :] = img[i, seam[i] + 1:end, :]
+        end
+    end
+
+    return new_img
+end
+
+
+# ╔═╡ d836de4e-0f74-47e9-8f41-cc7408d9ea1d
+function shrink_n_topdown(img, n)
+    energies = compute_energies(img)
+    for _ in 1:n
+        memory = topdown_least_energy(energies)
+        seam = find_vertical_seam(memory, energies)
+        img = remove_seam(img, seam)
+        energies = compute_energies(img)
+    end
+    return img
+end
+
+# ╔═╡ c21ce04c-90a3-4fff-a5b6-400e37377606
+_img = load(download("https://i.imgur.com/4SRnmkj.png"))
+
+# ╔═╡ 6997dcaa-cd13-4397-b82e-1c844eb1d24a
+md"Compute shrunk image: $(@bind shrink_topdown CheckBox())"
+
+# ╔═╡ 34070902-500f-4632-8d8b-6a0104cd17ee
+if shrink_topdown
+	topdown_image = shrink_n_topdown(_img, 200)
+	md"Shrink by: $(@bind topdown_n Slider(1:200, show_value=true))"
+end
+
+# ╔═╡ c8a86c3f-ad0d-40cd-a2f6-79cd803b55f0
+if shrink_topdown
+	topdownimg = shrink_n_topdown(_img,topdown_n)
+end
+
 # ╔═╡ 6b4d6584-f3be-11ea-131d-e5bdefcc791b
 md"## Function library
 
@@ -777,26 +926,34 @@ function shrink_n(img, n, min_seam, imgs=[]; show_lightning=true)
 end
 
 # ╔═╡ f6571d86-f388-11ea-0390-05592acb9195
+#=╠═╡
 if shrink_greedy
 	greedy_carved = shrink_n(img, 200, greedy_seam)
 	md"Shrink by: $(@bind greedy_n Slider(1:200; show_value=true))"
 end
+  ╠═╡ =#
 
 # ╔═╡ f626b222-f388-11ea-0d94-1736759b5f52
+#=╠═╡
 if shrink_greedy
 	greedy_carved[greedy_n]
 end
+  ╠═╡ =#
 
 # ╔═╡ 51e28596-f3c5-11ea-2237-2b72bbfaa001
+#=╠═╡
 if shrink_bottomup
 	bottomup_carved = shrink_n(img, 200, seam_from_precomputed_least_energy)
 	md"Shrink by: $(@bind bottomup_n Slider(1:200, show_value=true))"
 end
+  ╠═╡ =#
 
 # ╔═╡ 0a10acd8-f3c6-11ea-3e2f-7530a0af8c7f
+#=╠═╡
 if shrink_bottomup
 	bottomup_carved[bottomup_n]
 end
+  ╠═╡ =#
 
 # ╔═╡ 976c4482-0536-11eb-023e-8fe1976b2fb3
 # see discord
@@ -818,15 +975,19 @@ function memoized_shrink_n(img, n, min_seam, imgs=[]; show_lightning=true)
 end
 
 # ╔═╡ 4e3ef866-f3c5-11ea-3fb0-27d1ca9a9a3f
+#=╠═╡
 if shrink_dict
 	dict_carved = memoized_shrink_n(img, 200, recursive_memoized_seam)
 	md"Shrink by: $(@bind dict_n Slider(1:200, show_value=true))"
 end
+  ╠═╡ =#
 
 # ╔═╡ 6e73b1da-f3c5-11ea-145f-6383effe8a89
+#=╠═╡
 if shrink_dict
 	dict_carved[dict_n]
 end
+  ╠═╡ =#
 
 # ╔═╡ b92a6ab0-0541-11eb-3e85-f51158037054
 function matrix_memoized_shrink_n(img, n, min_seam, imgs=[]; show_lightning=true)
@@ -847,15 +1008,19 @@ function matrix_memoized_shrink_n(img, n, min_seam, imgs=[]; show_lightning=true
 end
 
 # ╔═╡ 50829af6-f3c5-11ea-04a8-0535edd3b0aa
+#=╠═╡
 if shrink_matrix
 	matrix_carved = matrix_memoized_shrink_n(img, 200, matrix_memoized_seam)
 	md"Shrink by: $(@bind matrix_n Slider(1:200, show_value=true))"
 end
+  ╠═╡ =#
 
 # ╔═╡ 9e56ecfa-f3c5-11ea-2e90-3b1839d12038
+#=╠═╡
 if shrink_matrix
 	matrix_carved[matrix_n]
 end
+  ╠═╡ =#
 
 # ╔═╡ ef26374a-f388-11ea-0b4e-67314a9a9094
 function pencil(X)
@@ -954,13 +1119,16 @@ yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!
 correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
 
 # ╔═╡ e3519118-f387-11ea-0c61-e1c2de1c24c1
+#=╠═╡
 if performance_experiment_without_vcat ⧀ performance_experiment_default
 	correct()
 else
 	keep_working(md"We are still using (roughly) the same number of allocations as the default implementation.")
 end
+  ╠═╡ =#
 
 # ╔═╡ d4ea4222-f388-11ea-3c8d-db0d651f5282
+#=╠═╡
 if performance_experiment_views ⧀ performance_experiment_default
 	if minimum(performance_experiment_views).allocs < 10
 		correct()
@@ -970,6 +1138,7 @@ if performance_experiment_views ⧀ performance_experiment_default
 else
 	keep_working(md"We are still using (roughly) the same number of allocations as the default implementation.")
 end
+  ╠═╡ =#
 
 # ╔═╡ 00026442-f381-11ea-2b41-bde1fff66011
 not_defined(variable_name) = Markdown.MD(Markdown.Admonition("danger", "Oopsie!", [md"Make sure that you define a variable called **$(Markdown.Code(string(variable_name)))**"]))
@@ -1006,11 +1175,13 @@ function hbox(x, y, gap=16; sy=size(y), sx=size(x))
 end
 
 # ╔═╡ f010933c-f318-11ea-22c5-4d2e64cd9629
+#=╠═╡
 begin
 	hbox(
 		float_to_color.(convolve(brightness.(img), Kernel.sobel()[1])),
 		float_to_color.(convolve(brightness.(img), Kernel.sobel()[2])))
 end
+  ╠═╡ =#
 
 # ╔═╡ 256edf66-f3e1-11ea-206e-4f9b4f6d3a3d
 vbox(x,y, gap=16) = hbox(x', y')'
@@ -1097,9 +1268,9 @@ bigbreak
 # ╟─7ddee6fc-f394-11ea-31fc-5bd665a65bef
 # ╟─980b1104-f394-11ea-0948-21002f26ee25
 # ╟─9945ae78-f395-11ea-1d78-cf6ad19606c8
-# ╟─87efe4c2-f38d-11ea-39cc-bdfa11298317
+# ╠═87efe4c2-f38d-11ea-39cc-bdfa11298317
 # ╟─f6571d86-f388-11ea-0390-05592acb9195
-# ╟─f626b222-f388-11ea-0d94-1736759b5f52
+# ╠═f626b222-f388-11ea-0d94-1736759b5f52
 # ╟─52452d26-f36c-11ea-01a6-313114b4445d
 # ╠═2a98f268-f3b6-11ea-1eea-81c28256a19e
 # ╟─32e9a944-f3b6-11ea-0e82-1dff6c2eef8d
@@ -1127,11 +1298,11 @@ bigbreak
 # ╠═46b637b0-0533-11eb-04f8-3778c96d5306
 # ╠═4e3bcf88-f3c5-11ea-3ada-2ff9213647b7
 # ╠═4e3ef866-f3c5-11ea-3fb0-27d1ca9a9a3f
-# ╟─6e73b1da-f3c5-11ea-145f-6383effe8a89
+# ╠═6e73b1da-f3c5-11ea-145f-6383effe8a89
 # ╟─cf39fa2a-f374-11ea-0680-55817de1b837
 # ╠═c8724b5e-f3bd-11ea-0034-b92af21ca12d
 # ╠═be7d40e2-f320-11ea-1b56-dff2a0a16e8d
-# ╟─507f3870-f3c5-11ea-11f6-ada3bb087634
+# ╠═507f3870-f3c5-11ea-11f6-ada3bb087634
 # ╠═50829af6-f3c5-11ea-04a8-0535edd3b0aa
 # ╠═9e56ecfa-f3c5-11ea-2e90-3b1839d12038
 # ╟─4f48c8b8-f39d-11ea-25d2-1fab031a514f
@@ -1149,7 +1320,16 @@ bigbreak
 # ╟─0a10acd8-f3c6-11ea-3e2f-7530a0af8c7f
 # ╟─946b69a0-f3a2-11ea-2670-819a5dafe891
 # ╟─0fbe2af6-f381-11ea-2f41-23cd1cf930d9
+# ╠═bdaf6b60-817c-4683-87fc-c624570a6fc6
 # ╟─48089a00-f321-11ea-1479-e74ba71df067
+# ╠═1729d753-3501-4fb5-bd1a-43ce7b87e934
+# ╠═d3d4012a-e1b3-4e9f-b9bf-d6c5c8f77f6b
+# ╠═a9eb5769-f524-458f-8fc5-7ac5d9e80c79
+# ╠═d836de4e-0f74-47e9-8f41-cc7408d9ea1d
+# ╠═c21ce04c-90a3-4fff-a5b6-400e37377606
+# ╠═6997dcaa-cd13-4397-b82e-1c844eb1d24a
+# ╠═34070902-500f-4632-8d8b-6a0104cd17ee
+# ╠═c8a86c3f-ad0d-40cd-a2f6-79cd803b55f0
 # ╟─6b4d6584-f3be-11ea-131d-e5bdefcc791b
 # ╟─437ba6ce-f37d-11ea-1010-5f6a6e282f9b
 # ╟─976c4482-0536-11eb-023e-8fe1976b2fb3
